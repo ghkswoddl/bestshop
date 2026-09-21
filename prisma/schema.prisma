@@ -1,0 +1,734 @@
+// LG Bestshop 고객상담 매니저 — 전체 데이터 모델 (P0 + P1)
+//
+// SQLite 제약으로 Prisma `enum` 과 `Json` 스칼라를 쓸 수 없다.
+// - enum  -> String + src/lib/enums.ts 의 유니온 타입이 단일 진실 공급원
+// - Json  -> String (JSON.stringify 결과 저장, 필드명 접미사 `Json`)
+//
+// 금액은 모두 Int(KRW). Float 금지. 이율(apr)은 basis point(590 = 5.90%) Int.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------- 조직/신원
+
+model Store {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  address   String
+  lat       Float?
+  lng       Float?
+  openTime  String // "10:00"
+  closeTime String // "20:00"
+  holidays  String? // "매월 2/4주 월요일"
+  phone     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  managers          Manager[]
+  inventoryItems    InventoryItem[]
+  consultations     Consultation[]
+  quotes            Quote[]
+  contracts         Contract[]
+  transfersOut      TransferRequest[] @relation("TransferFromStore")
+  transfersIn       TransferRequest[] @relation("TransferToStore")
+}
+
+/// role: MANAGER | STORE_ADMIN | HQ
+model Manager {
+  id           String   @id @default(cuid())
+  name         String
+  employeeNo   String   @unique
+  role         String   @default("MANAGER")
+  storeId      String
+  passwordHash String
+  email        String?
+  phone        String?
+  duty         String? // P1 — 담당업무
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  store                 Store             @relation(fields: [storeId], references: [id])
+  consultations         Consultation[]    @relation("ConsultationOwner")
+  assignedConsultations Consultation[]    @relation("ConsultationAssignee")
+  consultationNotes     ConsultationNote[]
+  followUps             FollowUp[]
+  quotes                Quote[]
+  contracts             Contract[]
+  comparisons           Comparison[]
+  promotions            Promotion[]
+  transferRequests      TransferRequest[]
+  scheduleChanges       ScheduleChange[]
+  auditLogs             AuditLog[]
+  recentlyViewed        RecentlyViewed[]
+  savedSearches         SavedSearch[]
+
+  @@index([storeId])
+}
+
+// -------------------------------------------------------------------- 고객
+
+model Customer {
+  id              String    @id @default(cuid())
+  name            String
+  phone           String
+  /// 하이픈/공백 제거본. 전화번호 검색은 항상 이 컬럼으로 매칭한다.
+  phoneNormalized String
+  memberNo        String?   @unique
+  birthDate       DateTime?
+  address         String?
+  addressDetail   String?
+  email           String?
+  note            String?
+  /// 중복 고객 병합 대상. 값이 있으면 이 레코드는 병합되어 숨겨진 쪽이다.
+  mergedIntoId    String?
+  /// 상담 이력이 아직 없는 고객(미귀속)의 쓰기 권한을 등록 매장으로 좁히기 위한 필드.
+  /// 조회(customerAccessWhere)는 전 매장에 열려 있지만, 쓰기(customerMutationAccessWhere)는
+  /// null 이거나 본인 매장일 때만 허용한다 — 타 매장이 등록한 워크인 고객의 PII를 덮어쓰지 못하게 한다.
+  registeredByStoreId String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  mergedInto Customer?  @relation("CustomerMerge", fields: [mergedIntoId], references: [id])
+  mergedFrom Customer[] @relation("CustomerMerge")
+
+  consents         CustomerConsent[]
+  ownedAppliances  OwnedAppliance[]
+  consultations    Consultation[]
+  quotes           Quote[]
+  contracts        Contract[]
+  comparisons      Comparison[]
+  followUps        FollowUp[]
+  recentlyViewed   RecentlyViewed[]
+
+  @@index([phoneNormalized])
+  @@index([name])
+  @@index([mergedIntoId])
+}
+
+/// type: MARKETING | THIRD_PARTY | PRIVACY
+model CustomerConsent {
+  id         String    @id @default(cuid())
+  customerId String
+  type       String
+  granted    Boolean   @default(false)
+  grantedAt  DateTime?
+  revokedAt  DateTime?
+  channel    String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, type])
+}
+
+model OwnedAppliance {
+  id            String    @id @default(cuid())
+  customerId    String
+  categoryId    String
+  productId     String?
+  modelName     String
+  brand         String    @default("LG")
+  purchasedAt   DateTime?
+  purchasePrice Int?
+  note          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  customer Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  category Category  @relation(fields: [categoryId], references: [id])
+  product  Product?  @relation(fields: [productId], references: [id])
+
+  @@index([customerId])
+  @@index([categoryId])
+}
+
+// --------------------------------------------------------------- 상품/재고
+
+model Category {
+  id                      String   @id @default(cuid())
+  code                    String   @unique
+  name                    String
+  parentId                String?
+  /// P1 — 보유가전 교체주기 참고정보 산출에 사용
+  replacementCycleMonths  Int?
+  sortOrder               Int      @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+
+  products        Product[]
+  ownedAppliances OwnedAppliance[]
+
+  @@index([parentId])
+}
+
+/// status: ON_SALE | DISCONTINUED | NOT_CARRIED
+model Product {
+  id          String   @id @default(cuid())
+  modelCode   String   @unique
+  name        String
+  categoryId  String
+  brand       String   @default("LG")
+  basePrice   Int
+  status      String   @default("ON_SALE")
+  description String?
+  imageUrl    String?
+  releasedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id])
+
+  specs             ProductSpec[]
+  inventoryItems    InventoryItem[]
+  quoteItems        QuoteItem[]
+  orderItems        OrderItem[]
+  promotionProducts PromotionProduct[]
+  comparisonItems   ComparisonItem[]
+  ownedAppliances   OwnedAppliance[]
+  transferRequests  TransferRequest[]
+  recentlyViewed    RecentlyViewed[]
+
+  @@index([categoryId])
+  @@index([name])
+}
+
+model ProductSpec {
+  id        String  @id @default(cuid())
+  productId String
+  key       String
+  value     String
+  unit      String?
+  /// 카테고리별 스펙 표시 순서
+  sortOrder Int     @default(0)
+  /// 상품비교 테이블에 기본 노출되는 주요 스펙 여부
+  isKey     Boolean @default(false)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, key])
+}
+
+/// status: IN_STOCK | LOW_STOCK | OUT_OF_STOCK | NOT_CARRIED | SALE_STOPPED
+model InventoryItem {
+  id          String   @id @default(cuid())
+  productId   String
+  storeId     String
+  quantity    Int      @default(0)
+  reservedQty Int      @default(0)
+  safetyStock Int      @default(0)
+  status      String   @default("IN_STOCK")
+  /// 재고 기준시각 — 재고 화면에 항상 표시해야 한다.
+  asOfAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, storeId])
+  @@index([storeId])
+}
+
+/// P1 — 매장 간 상품 이동요청
+/// status: REQUESTED | APPROVED | REJECTED | IN_TRANSIT | COMPLETED | CANCELLED
+model TransferRequest {
+  id            String    @id @default(cuid())
+  productId     String
+  fromStoreId   String
+  toStoreId     String
+  quantity      Int
+  status        String    @default("REQUESTED")
+  requestedById String
+  note          String?
+  requestedAt   DateTime  @default(now())
+  respondedAt   DateTime?
+  completedAt   DateTime?
+
+  product     Product @relation(fields: [productId], references: [id])
+  fromStore   Store   @relation("TransferFromStore", fields: [fromStoreId], references: [id])
+  toStore     Store   @relation("TransferToStore", fields: [toStoreId], references: [id])
+  requestedBy Manager @relation(fields: [requestedById], references: [id])
+
+  @@index([productId])
+  @@index([toStoreId, status])
+}
+
+// ------------------------------------------------------------ 프로모션/비교
+
+/// benefitType: PERCENT_DISCOUNT | AMOUNT_DISCOUNT | GIFT | CASHBACK | BUNDLE
+/// benefitValue: PERCENT_DISCOUNT 이면 퍼센트(10 = 10%), 그 외 금액(KRW Int)
+/// status: DRAFT | ACTIVE | ENDED | CANCELLED
+model Promotion {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  title          String
+  description    String?
+  benefitType    String
+  benefitValue   Int      @default(0)
+  /// JSON 문자열: { minQty, minAmount, maxDiscount, categoryCodes, ... }
+  conditionsJson String?
+  startsAt       DateTime
+  endsAt         DateTime
+  status         String   @default("ACTIVE")
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  createdBy Manager?           @relation(fields: [createdById], references: [id])
+  products  PromotionProduct[]
+
+  @@index([startsAt, endsAt])
+}
+
+model PromotionProduct {
+  id          String @id @default(cuid())
+  promotionId String
+  productId   String
+
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([promotionId, productId])
+}
+
+/// 상품비교 — 항목은 최대 4개(애플리케이션 레벨에서 강제)
+model Comparison {
+  id             String    @id @default(cuid())
+  managerId      String
+  consultationId String?
+  customerId     String?
+  title          String?
+  savedAt        DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  manager      Manager       @relation(fields: [managerId], references: [id])
+  consultation Consultation? @relation(fields: [consultationId], references: [id])
+  customer     Customer?     @relation(fields: [customerId], references: [id])
+  items        ComparisonItem[]
+
+  @@index([managerId])
+}
+
+model ComparisonItem {
+  id           String @id @default(cuid())
+  comparisonId String
+  productId    String
+  sortOrder    Int    @default(0)
+  /// 비교 결과에서 고른 견적 대상 상품 (PRD §4 상품비교 P0).
+  /// Phase 6 은 quoteCandidateProductIds(comparisonId) 로 읽는다.
+  isQuoteCandidate Boolean @default(false)
+
+  comparison Comparison @relation(fields: [comparisonId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([comparisonId, productId])
+}
+
+// --------------------------------------------------------------- 견적/결제
+
+/// status: DRAFT | SENT | LOCKED | CONVERTED | EXPIRED | CANCELLED
+/// LOCKED 이후에는 수정 불가 — 새 version 으로 분기한다.
+model Quote {
+  id             String    @id @default(cuid())
+  quoteNo        String    @unique
+  customerId     String
+  consultationId String?
+  managerId      String
+  storeId        String
+  status         String    @default("DRAFT")
+  validUntil     DateTime?
+  subtotal       Int       @default(0)
+  discountTotal  Int       @default(0)
+  deliveryFee    Int       @default(0)
+  installFee     Int       @default(0)
+  grandTotal     Int       @default(0)
+  version        Int       @default(1)
+  parentQuoteId  String?
+  templateName   String? // P1 — 견적서 템플릿
+  memo           String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  consultation Consultation? @relation(fields: [consultationId], references: [id])
+  manager      Manager       @relation(fields: [managerId], references: [id])
+  store        Store         @relation(fields: [storeId], references: [id])
+
+  parentQuote Quote?  @relation("QuoteVersion", fields: [parentQuoteId], references: [id])
+  childQuotes Quote[] @relation("QuoteVersion")
+
+  items       QuoteItem[]
+  paymentPlan PaymentPlan?
+  contract    Contract?
+
+  @@index([customerId])
+  @@index([storeId, status])
+}
+
+model QuoteItem {
+  id        String @id @default(cuid())
+  quoteId   String
+  productId String
+  qty       Int    @default(1)
+  /// JSON 문자열: 색상/용량 등 선택 옵션
+  optionsJson String?
+  /// 견적 작성 시점 단가 스냅샷 — 이후 상품 가격이 바뀌어도 불변
+  unitPriceSnapshot Int
+  discountAmount    Int     @default(0)
+  appliedPromotionId String?
+  /// JSON 문자열: 적용 시점 프로모션 전체 스냅샷
+  appliedPromotionSnapshot String?
+  lineTotal Int
+  sortOrder Int @default(0)
+
+  quote   Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  orderItems OrderItem[]
+
+  @@index([quoteId])
+}
+
+/// type: LUMP | CARD | INSTALLMENT | RENTAL
+/// apr: basis point Int (590 = 5.90%)
+model FinanceProduct {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  type        String
+  months      Int     @default(0)
+  apr         Int     @default(0)
+  provider    String?
+  minAmount   Int?
+  maxAmount   Int?
+  benefitNote String?
+  active      Boolean @default(true)
+
+  paymentPlans PaymentPlan[]
+}
+
+/// status: DRAFT | APPROVED | REJECTED | CANCELLED
+/// 월 납입금은 올림 처리하고 마지막 회차(lastMonthAmount)에 잔액을 반영한다.
+model PaymentPlan {
+  id               String   @id @default(cuid())
+  quoteId          String   @unique
+  financeProductId String
+  principal        Int
+  downPayment      Int      @default(0)
+  months           Int      @default(0)
+  monthlyAmount    Int      @default(0)
+  lastMonthAmount  Int      @default(0)
+  interestTotal    Int      @default(0)
+  totalPayable     Int
+  status           String   @default("DRAFT")
+  approvalCode     String?
+  failureReason    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  quote          Quote          @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  financeProduct FinanceProduct @relation(fields: [financeProductId], references: [id])
+}
+
+// ------------------------------------------------------ 계약/서명/주문/배송
+
+/// status: DRAFT | PENDING_SIGNATURE | SIGNED | CHANGED | CANCELLED
+model Contract {
+  id         String @id @default(cuid())
+  contractNo String @unique
+  quoteId    String @unique
+  customerId String
+  managerId  String
+  storeId    String
+  status     String @default("DRAFT")
+  /// JSON 문자열 — 계약 시점 고객정보 스냅샷
+  customerSnapshotJson       String
+  /// JSON 문자열 — 계약 시점 배송지 스냅샷
+  deliveryAddressSnapshotJson String
+  /// JSON 문자열 — 계약 시점 결제/금융조건 스냅샷.
+  /// PaymentPlan 은 FinanceProduct 를 참조만 하므로, 금융상품이 나중에 수정되어도
+  /// 서명된 계약의 조건 문구가 흔들리지 않도록 계약 시점 값을 통째로 복사한다.
+  financeSnapshotJson String?
+  totalAmount  Int
+  signedAt     DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  quote    Quote    @relation(fields: [quoteId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+  manager  Manager  @relation(fields: [managerId], references: [id])
+  store    Store    @relation(fields: [storeId], references: [id])
+
+  signatureRequests SignatureRequest[]
+  order             Order?
+
+  @@index([storeId, status])
+}
+
+/// status: PENDING | SENT | SIGNED | EXPIRED | INVALIDATED
+/// 계약 금액이 변경되면 기존 요청은 INVALIDATED 로 무효화한다.
+model SignatureRequest {
+  id                String    @id @default(cuid())
+  contractId        String
+  token             String    @unique
+  status            String    @default("PENDING")
+  requestedAt       DateTime  @default(now())
+  sentCount         Int       @default(1)
+  expiresAt         DateTime
+  signedAt          DateTime?
+  /// data URL 형태의 Canvas 서명 이미지 (모의 구현)
+  signatureImage    String?
+  signerName        String?
+  signerIp          String?
+  invalidatedAt     DateTime?
+  invalidatedReason String?
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([contractId, status])
+}
+
+/// status: PLACED | PREPARING | SHIPPING | DELIVERED | INSTALLED | COMPLETED | CANCELLED
+model Order {
+  id          String    @id @default(cuid())
+  orderNo     String    @unique
+  contractId  String    @unique
+  status      String    @default("PLACED")
+  /// P1 고객 안내용 공개 추적 링크(`/track/[token]`)의 토큰.
+  /// 주문 생성 시 난수로 발급한다. 소지 자체가 접근 권한이므로 추측 불가능해야 한다.
+  publicTrackingToken String @unique
+  placedAt    DateTime  @default(now())
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  contract Contract @relation(fields: [contractId], references: [id])
+
+  items        OrderItem[]
+  deliveryJobs DeliveryJob[]
+  installJobs  InstallJob[]
+}
+
+model OrderItem {
+  id          String @id @default(cuid())
+  orderId     String
+  productId   String
+  quoteItemId String?
+  qty         Int    @default(1)
+  unitPrice   Int
+  lineTotal   Int
+
+  order     Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product    @relation(fields: [productId], references: [id])
+  quoteItem QuoteItem? @relation(fields: [quoteItemId], references: [id])
+
+  deliveryJobs DeliveryJob[]
+  installJobs  InstallJob[]
+
+  @@index([orderId])
+}
+
+/// status: SCHEDULED | PREPARING | IN_TRANSIT | DELIVERED | FAILED | CANCELLED
+model DeliveryJob {
+  id          String    @id @default(cuid())
+  orderId     String
+  orderItemId String?
+  status      String    @default("SCHEDULED")
+  scheduledAt DateTime?
+  completedAt DateTime?
+  carrier     String?
+  trackingNo  String?
+  address     String?
+  note        String?
+  /// P1 — 지연 알림 파생 계산 보조 플래그
+  delayed     Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  order     Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem? @relation(fields: [orderItemId], references: [id])
+
+  installJobs     InstallJob[]
+  scheduleChanges ScheduleChange[]
+
+  @@index([orderId, status])
+}
+
+/// status: SCHEDULED | ASSIGNED | IN_PROGRESS | COMPLETED | FAILED | CANCELLED
+/// 배송 완료 이전에는 COMPLETED 로 전이할 수 없다 (상태머신에서 강제).
+model InstallJob {
+  id             String    @id @default(cuid())
+  orderId        String
+  orderItemId    String?
+  deliveryJobId  String?
+  status         String    @default("SCHEDULED")
+  scheduledAt    DateTime?
+  completedAt    DateTime?
+  technicianName String?
+  note           String?
+  delayed        Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem   OrderItem?   @relation(fields: [orderItemId], references: [id])
+  deliveryJob DeliveryJob? @relation(fields: [deliveryJobId], references: [id])
+
+  scheduleChanges ScheduleChange[]
+
+  @@index([orderId, status])
+}
+
+/// P1 — 배송/설치 일정 변경 이력
+model ScheduleChange {
+  id                  String    @id @default(cuid())
+  deliveryJobId       String?
+  installJobId        String?
+  previousScheduledAt DateTime?
+  newScheduledAt      DateTime?
+  reason              String?
+  changedById         String?
+  createdAt           DateTime  @default(now())
+
+  deliveryJob DeliveryJob? @relation(fields: [deliveryJobId], references: [id], onDelete: Cascade)
+  installJob  InstallJob?  @relation(fields: [installJobId], references: [id], onDelete: Cascade)
+  changedBy   Manager?     @relation(fields: [changedById], references: [id])
+}
+
+// -------------------------------------------------------------------- 상담
+
+/// stage: IN_PROGRESS | QUOTED | CONTRACTED | DELIVERING | COMPLETED | CANCELLED
+/// 고객조회만으로는 생성되지 않는다 — 매니저가 명시적으로 상담을 시작할 때만 생성.
+model Consultation {
+  id                 String    @id @default(cuid())
+  customerId         String
+  managerId          String
+  storeId            String
+  stage              String    @default("IN_PROGRESS")
+  channel            String? // VISIT | PHONE | ONLINE
+  startedAt          DateTime  @default(now())
+  endedAt            DateTime?
+  summary            String?
+  /// P1 — 상담 배정/인수인계
+  assignedManagerId  String?
+  handoverNote       String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  customer        Customer @relation(fields: [customerId], references: [id])
+  manager         Manager  @relation("ConsultationOwner", fields: [managerId], references: [id])
+  assignedManager Manager? @relation("ConsultationAssignee", fields: [assignedManagerId], references: [id])
+  store           Store    @relation(fields: [storeId], references: [id])
+
+  notes       ConsultationNote[]
+  followUps   FollowUp[]
+  quotes      Quote[]
+  comparisons Comparison[]
+
+  @@index([storeId, startedAt])
+  @@index([customerId])
+}
+
+model ConsultationNote {
+  id             String   @id @default(cuid())
+  consultationId String
+  managerId      String
+  content        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  manager      Manager      @relation(fields: [managerId], references: [id])
+
+  @@index([consultationId])
+}
+
+/// P1 — 상담 후속조치
+/// type: CALL | VISIT | MESSAGE | OTHER   status: PENDING | DONE | CANCELLED
+model FollowUp {
+  id             String    @id @default(cuid())
+  consultationId String
+  customerId     String
+  managerId      String
+  type           String    @default("CALL")
+  status         String    @default("PENDING")
+  dueAt          DateTime
+  content        String?
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  customer     Customer     @relation(fields: [customerId], references: [id])
+  manager      Manager      @relation(fields: [managerId], references: [id])
+
+  @@index([managerId, status, dueAt])
+}
+
+// -------------------------------------------------------------------- 공통
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  actorManagerId String?
+  entityType     String
+  entityId       String
+  action         String
+  beforeJson     String?
+  afterJson      String?
+  ip             String?
+  createdAt      DateTime @default(now())
+
+  actor Manager? @relation(fields: [actorManagerId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+/// P1 — 최근 조회 목록. targetType: CUSTOMER | PRODUCT
+model RecentlyViewed {
+  id         String   @id @default(cuid())
+  managerId  String
+  targetType String
+  targetId   String
+  customerId String?
+  productId  String?
+  viewedAt   DateTime @default(now())
+
+  manager  Manager   @relation(fields: [managerId], references: [id], onDelete: Cascade)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product  Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([managerId, targetType, targetId])
+  @@index([managerId, viewedAt])
+}
+
+/// P1 — 검색조건 저장. scope: CUSTOMER | PRODUCT | CONSULTATION
+model SavedSearch {
+  id         String   @id @default(cuid())
+  managerId  String
+  scope      String
+  name       String
+  /// JSON 문자열 — 검색 파라미터
+  paramsJson String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  manager Manager @relation(fields: [managerId], references: [id], onDelete: Cascade)
+
+  @@unique([managerId, scope, name])
+}

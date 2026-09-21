@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply h-full;
+  }
+
+  body {
+    @apply min-h-full bg-gray-100 font-sans text-body text-gray-900 antialiased;
+  }
+
+  /* design-system.md §3 — 숫자/가격은 고정폭 숫자 */
+  table,
+  input[type="number"],
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-2 ring-lg-red ring-offset-1;
+  }
+}
+
+/*
+ * 인쇄용 (PRD §4 견적서 PDF 출력 — /quotes/[id]/print).
+ * 인쇄 화면도 (app) 라우트 그룹 안에 있어 앱 셸을 물려받으므로, 별도 레이아웃을 만드는 대신
+ * 여기서 셸만 걷어낸다. 선택자는 Phase 0 의 시맨틱 마크업(사이드바 nav, 헤더)을 그대로 쓴다.
+ */
+@media print {
+  /* 앱 헤더(src/components/layout/Header.tsx) 는 자체 `print:hidden` 유틸리티로 숨긴다.
+     여기서 `body header` 처럼 태그만으로 잡으면, 인쇄 페이지 자신의 문서 제목
+     블록(quotes/[id]/print 의 <header>, 견적서 타이틀/회사정보)까지 함께 지워진다. */
+  nav[aria-label="주요 메뉴"],
+  .print-hidden {
+    display: none !important;
+  }
+
+  html,
+  body {
+    height: auto;
+    background: #fff;
+  }
+
+  body * {
+    overflow: visible !important;
+  }
+
+  .print-sheet {
+    max-width: none;
+    padding: 0;
+  }
+}
