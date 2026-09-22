@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LG Bestshop — 전체 화면 Userflow</title>
+<style>
+  :root{
+    --bg:#0f1115;
+    --panel:#171a21;
+    --panel-2:#1e2229;
+    --border:#2b3038;
+    --text:#e8eaed;
+    --muted:#9aa1ac;
+    --accent:#e11d48;
+    --nav-edge:#4b5361;
+    --happy:#f59e0b;
+
+    --c-auth:#64748b;
+    --c-dashboard:#6366f1;
+    --c-customer:#0d9488;
+    --c-consultation:#7c3aed;
+    --c-catalog:#d97706;
+    --c-promotion:#db2777;
+    --c-quote:#2563eb;
+    --c-contract:#e11d48;
+    --c-delivery:#16a34a;
+    --c-store:#71717a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;}
+  h1,h2,h3{margin:0;}
+
+  header.top{
+    padding:16px 20px;border-bottom:1px solid var(--border);
+    display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;
+    background:var(--panel);position:sticky;top:0;z-index:20;
+  }
+  header.top .title h1{font-size:18px;font-weight:700;}
+  header.top .title p{margin:2px 0 0;font-size:12.5px;color:var(--muted);}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  button.toggle{
+    background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    padding:8px 12px;border-radius:8px;font-size:13px;cursor:pointer;
+    display:flex;align-items:center;gap:6px;
+  }
+  button.toggle:hover{border-color:var(--accent);}
+  button.toggle.active{background:var(--happy);border-color:var(--happy);color:#1a1200;font-weight:700;}
+
+  .layout{display:flex;height:calc(100vh - 68px);}
+
+  aside.filters{
+    width:220px;flex:0 0 220px;border-right:1px solid var(--border);
+    background:var(--panel);padding:14px;overflow-y:auto;
+  }
+  aside.filters h3{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+  .filter-item{display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:6px;cursor:pointer;font-size:13.5px;}
+  .filter-item:hover{background:var(--panel-2);}
+  .filter-item input{accent-color:var(--accent);}
+  .swatch{width:10px;height:10px;border-radius:3px;flex:0 0 10px;}
+  .legend-block{margin-top:18px;padding-top:14px;border-top:1px solid var(--border);}
+  .legend-line{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-bottom:8px;}
+  .legend-swatch-line{width:26px;height:0;border-top:2px solid var(--nav-edge);}
+  .legend-swatch-line.action{border-top:2px solid var(--c-contract);}
+  .legend-swatch-line.happy{border-top:3px solid var(--happy);}
+  .legend-box{width:14px;height:14px;border-radius:4px;border:2px dashed var(--muted);flex:0 0 14px;}
+
+  main.board-wrap{flex:1;overflow:auto;position:relative;padding:28px;}
+  .board{position:relative;display:inline-flex;gap:64px;min-width:100%;}
+  .lane{display:flex;flex-direction:column;gap:18px;width:200px;flex:0 0 200px;}
+  .lane-header{
+    font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.05em;padding-bottom:8px;border-bottom:2px solid var(--border);
+    margin-bottom:2px;position:sticky;top:0;background:transparent;
+  }
+  .node{
+    position:relative;background:var(--panel-2);border:1.5px solid var(--border);
+    border-radius:10px;padding:10px 12px;cursor:pointer;transition:transform .12s, border-color .12s, opacity .15s;
+    z-index:2;
+  }
+  .node:hover{border-color:var(--accent);transform:translateY(-2px);}
+  .node.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(225,29,72,.35);}
+  .node.dimmed{opacity:.18;}
+  .node .route{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--muted);}
+  .node .name{font-size:13.5px;font-weight:600;margin-top:2px;}
+  .node .cat-dot{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:10px 0 0 10px;}
+  .node.public{border-style:dashed;}
+  .node.public::after{
+    content:"🔓 인증없음";position:absolute;right:8px;top:8px;font-size:9.5px;color:#fbbf24;
+  }
+
+  svg.edges{position:absolute;left:0;top:0;pointer-events:none;z-index:1;overflow:visible;}
+  path.edge{fill:none;stroke:var(--nav-edge);stroke-width:1.6;}
+  path.edge.action{stroke-width:2.1;}
+  path.edge.dimmed{opacity:.08;}
+  path.edge.happy{stroke:var(--happy)!important;stroke-width:3;filter:drop-shadow(0 0 3px rgba(245,158,11,.6));}
+
+  aside.detail{
+    width:300px;flex:0 0 300px;border-left:1px solid var(--border);
+    background:var(--panel);padding:16px;overflow-y:auto;
+  }
+  aside.detail h3{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+  #detailBody .route{font-family:ui-monospace,Consolas,monospace;font-size:12px;color:var(--accent);}
+  #detailBody .name{font-size:17px;font-weight:700;margin:4px 0 10px;}
+  #detailBody .desc{font-size:13px;line-height:1.55;color:#cbd0d8;margin-bottom:12px;}
+  #detailBody .rel-title{font-size:11.5px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
+  #detailBody ul{margin:0 0 12px;padding-left:16px;font-size:12.5px;line-height:1.6;color:#cbd0d8;}
+  #detailBody .badge{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:999px;background:var(--panel-2);border:1px solid var(--border);color:var(--muted);margin-right:6px;}
+  #detailBody .edge-list{font-size:12px;margin-bottom:10px;}
+  #detailBody .edge-list div{padding:4px 0;border-bottom:1px dashed var(--border);color:#cbd0d8;}
+  #detailBody .edge-list span.tag{color:var(--muted);font-size:10.5px;}
+  .empty-hint{color:var(--muted);font-size:13px;line-height:1.6;}
+
+  @media (max-width:900px){
+    .layout{flex-direction:column;height:auto;}
+    aside.filters,aside.detail{width:100%;flex:none;border:none;border-bottom:1px solid var(--border);}
+    main.board-wrap{height:70vh;}
+    header.top{flex-direction:column;align-items:flex-start;}
+  }
+  @media (max-width:480px){
+    header.top{padding:12px;}
+    header.top .title h1{font-size:15px;}
+    .controls{width:100%;}
+    button.toggle{flex:1;justify-content:center;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="title">
+    <h1>LG Bestshop — 전체 화면 Userflow</h1>
+    <p>25개 라우트 · 로그인부터 배송추적까지, 화면 이동과 서버 액션 전이를 한 장으로</p>
+  </div>
+  <div class="controls">
+    <button class="toggle" id="happyBtn">⭐ Phase 11 해피패스 강조</button>
+    <button class="toggle" id="labelBtn">🏷️ 액션 라벨 표시</button>
+    <button class="toggle" id="resetBtn">↺ 필터 초기화</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="filters">
+    <h3>카테고리 필터</h3>
+    <div id="filterList"></div>
+
+    <div class="legend-block">
+      <h3>범례</h3>
+      <div class="legend-line"><span class="legend-swatch-line"></span> 내비게이션 이동</div>
+      <div class="legend-line"><span class="legend-swatch-line action"></span> 서버 액션 트리거</div>
+      <div class="legend-line"><span class="legend-swatch-line happy"></span> E2E 해피패스</div>
+      <div class="legend-line"><span class="legend-box"></span> 인증 없음 (토큰 링크)</div>
+    </div>
+  </aside>
+
+  <main class="board-wrap" id="boardWrap">
+    <div class="board" id="board">
+      <svg class="edges" id="edgeSvg">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L7,3 L0,6 Z" fill="var(--nav-edge)"></path>
+          </marker>
+          <marker id="arrowAction" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L7,3 L0,6 Z" fill="var(--c-contract)"></path>
+          </marker>
+          <marker id="arrowHappy" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L7,3 L0,6 Z" fill="var(--happy)"></path>
+          </marker>
+        </defs>
+      </svg>
+      <!-- lanes injected by JS -->
+    </div>
+  </main>
+
+  <aside class="detail">
+    <h3>화면 상세</h3>
+    <div id="detailBody">
+      <p class="empty-hint">왼쪽 다이어그램에서 노드를 클릭하면 라우트, 화면 설명, 관련 서버 액션과 연결된 전이가 여기 표시됩니다.</p>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CATEGORIES = [
+    {id:"auth", label:"인증", color:"var(--c-auth)"},
+    {id:"dashboard", label:"대시보드", color:"var(--c-dashboard)"},
+    {id:"customer", label:"고객", color:"var(--c-customer)"},
+    {id:"consultation", label:"상담", color:"var(--c-consultation)"},
+    {id:"catalog", label:"카탈로그/재고", color:"var(--c-catalog)"},
+    {id:"promotion", label:"프로모션", color:"var(--c-promotion)"},
+    {id:"quote", label:"견적", color:"var(--c-quote)"},
+    {id:"contract", label:"계약/서명", color:"var(--c-contract)"},
+    {id:"delivery", label:"배송/설치", color:"var(--c-delivery)"},
+    {id:"store", label:"매장", color:"var(--c-store)"}
+  ];
+
+  var NODES = [
+    {id:"login", route:"/login", name:"로그인", category:"auth",
+      desc:"매니저 로그인 화면. 사번/비밀번호로 인증 후 세션 쿠키(bestshop_session, HMAC-SHA256 서명, 8시간 만료)를 발급한다.",
+      related:["loginAction — 로그인 처리, 성공 시 /dashboard로 이동"]},
+
+    {id:"dashboard", route:"/dashboard", name:"상담대시보드", category:"dashboard",
+      desc:"당일 상담 건수, 단계별 현황, 주요 화면 바로가기를 보여주는 인증 후 첫 진입 화면. 모든 인증 후 화면의 허브.",
+      related:["집계는 상담/견적/계약/배송 데이터에서 파생되며 별도 저장값이 없음"]},
+
+    {id:"customers", route:"/customers", name:"고객 목록", category:"customer",
+      desc:"매장 범위로 스코프된 고객 검색/목록. customerAccessWhere 기준으로 상담이력이 아직 없는 워크인 신규 고객도 조회 가능.",
+      related:["검색어에서 숫자를 뽑아 전화번호 절을 만들 때 숫자가 없으면 절 자체를 빼야 함(빈 문자열 contains는 스코프를 무력화)"]},
+
+    {id:"customer_detail", route:"/customers/[id]", name:"고객상세", category:"customer",
+      desc:"기본정보·보유가전·상담이력·메모. 여기서 매니저가 명시적으로 신규 상담을 시작한다.",
+      related:["startConsultationAction — 상담 시작 (단계 IN_PROGRESS)",
+        "customerMutationAccessWhere — PII 수정은 registeredByStoreId 매장으로 제한",
+        "보유가전 → /products?categoryId=… 링크"]},
+
+    {id:"consultations", route:"/consultations", name:"상담 목록", category:"consultation",
+      desc:"매장 범위 상담 목록 조회."},
+
+    {id:"consultation_detail", route:"/consultations/[id]", name:"상담상세", category:"consultation",
+      desc:"메모, 후속조치(FollowUp), 연결된 견적/계약/배송을 확인. 상담 단계는 advanceConsultationStage() 하나로만 전진한다.",
+      related:["closeConsultationAction — 매니저가 판매 없이 상담을 닫음(CLOSED)",
+        "메모는 작성자만 수정·삭제 가능",
+        "자동전이: 견적생성→QUOTED, 계약생성→CONTRACTED, 배송개시→DELIVERING, 주문완료→COMPLETED"]},
+
+    {id:"products", route:"/products", name:"상품탐색", category:"catalog",
+      desc:"categoryId 또는 category 코드로 카테고리 필터링된 상품 목록."},
+
+    {id:"product_detail", route:"/products/[id]", name:"상품상세", category:"catalog",
+      desc:"단가(basePrice) 등 상품 정보. 비교함에 담거나 매장 재고를 확인한다."},
+
+    {id:"compare", route:"/compare", name:"상품비교", category:"catalog",
+      desc:"최대 4개 상품 비교, 그 중 견적에 담을 대상(견적대상)을 선택.",
+      related:["addToComparisonAction / toggleQuoteCandidateAction / saveComparisonAction / reopenComparisonAction"]},
+
+    {id:"inventory", route:"/inventory", name:"재고 및 매장확인", category:"catalog",
+      desc:"매장별 재고 수량 확인."},
+
+    {id:"inventory_transfers", route:"/inventory/transfers", name:"매장간 재고 이동요청", category:"catalog",
+      desc:"타 매장 재고를 자기 매장으로 이동 요청.",
+      related:["createTransferRequestAction"]},
+
+    {id:"promotions", route:"/promotions", name:"프로모션 목록", category:"promotion",
+      desc:"진행중인 프로모션 목록."},
+
+    {id:"promotion_detail", route:"/promotions/[id]", name:"프로모션 상세", category:"promotion",
+      desc:"프로모션 조건과 할인 내용. 이미 만든 견적에 재적용할 수 있다.",
+      related:["reapplyPromotionsAction — promotions.ts가 0 ≤ discount ≤ lineTotal로 이미 clamp, 호출측에서 재clamp 금지"]},
+
+    {id:"quotes", route:"/quotes", name:"견적 목록", category:"quote", desc:"매장 범위 견적 목록."},
+
+    {id:"quote_new", route:"/quotes/new", name:"견적서 신규 작성", category:"quote",
+      desc:"비교함에서 선택한 견적대상으로 신규 견적을 만든다.",
+      related:["createQuoteAction"]},
+
+    {id:"quote_detail", route:"/quotes/[id]", name:"견적상세/수정", category:"quote",
+      desc:"품목·옵션·프로모션·합계. DRAFT 상태만 편집 가능(isQuoteEditable이 단일 판정자). 단가는 담는 순간 Product.basePrice → QuoteItem.unitPriceSnapshot으로 고정.",
+      related:["recalculateQuote() — 라인/수수료 변경 시 합계 재계산",
+        "forkQuoteAction — 잠긴 견적은 새 버전으로 분기(원본 불변)",
+        "deleteQuoteAction"]},
+
+    {id:"quote_payment", route:"/quotes/[id]/payment", name:"결제 및 금융설계", category:"quote",
+      desc:"결제수단·할부·렌탈 설계. computeSchedule()이 화면·비교표·저장 경로 공통의 단일 진실 공급원. 할부수수료는 단리로 원 단위 절사.",
+      related:["savePaymentPlanAction — 견적 DRAFT→SENT",
+        "decidePaymentPlanAction / cancelPaymentPlanAction — 취소 시 SENT→DRAFT",
+        "isPlanEditable(승인/거절, DRAFT만) ≠ canReplacePlan(재설계 가능, DRAFT+CANCELLED)"]},
+
+    {id:"quote_print", route:"/quotes/[id]/print", name:"견적서 인쇄/PDF", category:"quote",
+      desc:"견적서 인쇄/PDF 뷰."},
+
+    {id:"contracts", route:"/contracts", name:"계약 목록", category:"contract", desc:"매장 범위 계약 목록."},
+
+    {id:"contract_detail", route:"/contracts/[id]", name:"계약상세", category:"contract",
+      desc:"계약정보, 전자서명 상태, 재전송/취소/변경. 계약 금액·고객·배송지·금융조건은 전부 계약 시점 스냅샷. 금액이 바뀌면 살아있는 서명요청을 자동 무효화하고 새 링크를 발급.",
+      related:["createContractAction — 단일 트랜잭션: 견적 재검증 → 재고 조건부차감(updateMany gte) → Contract → 견적 LOCKED → 상담 CONTRACTED → SignatureRequest",
+        "amendContractAction / cancelContractAction / resendSignatureAction"]},
+
+    {id:"sign_token", route:"/sign/[token]", name:"계약 전자서명 (고객용)", category:"contract", isPublic:true,
+      desc:"의도적으로 인증이 없는 화면. 고객은 계정이 없고 접근 제어는 32바이트 난수 토큰의 소지뿐. (app) 라우트그룹 밖에 두어 세션가드/앱셸을 피한다 — 스코프 누락이 아니라 설계 의도.",
+      related:["signContractAction — 서명 완료 시 같은 트랜잭션에서 Order/OrderItem 생성, 견적 CONVERTED로 전환"]},
+
+    {id:"deliveries", route:"/deliveries", name:"배송 목록", category:"delivery", desc:"매장 범위 배송 목록."},
+
+    {id:"delivery_detail", route:"/deliveries/[id]", name:"배송/설치 상세", category:"delivery",
+      desc:"상태 전이는 orders.ts의 전이표가 유일한 판정자. 설치 완료는 대응 배송이 완료된 뒤에만 가능. 지연은 저장하지 않고 조회 시점에 계산.",
+      related:["advanceDeliveryAction / advanceInstallAction",
+        "ScheduleChange — 일정 변경은 scheduledAt을 조용히 덮어쓰지 않고 반드시 이력에 기록",
+        "Order.status는 작업들에서 파생(syncOrderStatus) — 가장 덜 진행된 작업을 따름, INSTALLED는 파생되지 않음"]},
+
+    {id:"track_token", route:"/track/[token]", name:"배송/설치 추적 (고객용)", category:"delivery", isPublic:true,
+      desc:"/sign/[token]과 같은 설계로 의도적으로 인증이 없다. 읽기 전용이며 금액·담당자·내부 메모는 findOrderByTrackingToken의 select에서 조회 자체를 하지 않는다.",
+      related:[]},
+
+    {id:"store", route:"/store", name:"매장 및 매니저 정보", category:"store",
+      desc:"매장/매니저 정보. HQ는 전 매장 조회가 가능하지만 전용 UI는 만들지 않는다."}
+  ];
+
+  // from, to, type: 'nav' | 'action', label, happy(E2E happy path)
+  var EDGES = [
+    {from:"login", to:"dashboard", type:"action", label:"loginAction 로그인 성공", happy:true},
+
+    {from:"dashboard", to:"customers", type:"nav", label:"고객 메뉴"},
+    {from:"dashboard", to:"consultations", type:"nav", label:"상담 메뉴"},
+    {from:"dashboard", to:"quotes", type:"nav", label:"견적 메뉴"},
+    {from:"dashboard", to:"contracts", type:"nav", label:"계약 메뉴"},
+    {from:"dashboard", to:"deliveries", type:"nav", label:"배송 메뉴"},
+    {from:"dashboard", to:"promotions", type:"nav", label:"프로모션 메뉴"},
+    {from:"dashboard", to:"store", type:"nav", label:"매장 메뉴"},
+
+    {from:"customers", to:"customer_detail", type:"nav", label:"고객 선택", happy:true},
+    {from:"customer_detail", to:"consultation_detail", type:"action", label:"startConsultationAction (상담 시작)", happy:true},
+    {from:"customer_detail", to:"products", type:"nav", label:"보유가전 링크"},
+
+    {from:"consultations", to:"consultation_detail", type:"nav", label:"상담 선택"},
+    {from:"consultation_detail", to:"quote_detail", type:"nav", label:"연결된 견적"},
+    {from:"consultation_detail", to:"contract_detail", type:"nav", label:"연결된 계약"},
+    {from:"consultation_detail", to:"delivery_detail", type:"nav", label:"연결된 배송"},
+
+    {from:"products", to:"product_detail", type:"nav", label:"상품 선택", happy:true},
+    {from:"product_detail", to:"compare", type:"action", label:"addToComparisonAction", happy:true},
+    {from:"products", to:"compare", type:"action", label:"addToComparisonAction"},
+    {from:"product_detail", to:"inventory", type:"nav", label:"재고 확인"},
+    {from:"inventory", to:"inventory_transfers", type:"nav", label:"매장간 이동요청"},
+
+    {from:"promotions", to:"promotion_detail", type:"nav", label:"프로모션 선택"},
+    {from:"promotion_detail", to:"quote_detail", type:"action", label:"reapplyPromotionsAction"},
+
+    {from:"compare", to:"quote_new", type:"action", label:"toggleQuoteCandidateAction (견적대상 선택)", happy:true},
+    {from:"quotes", to:"quote_new", type:"nav", label:"신규 작성"},
+    {from:"quotes", to:"quote_detail", type:"nav", label:"견적 선택"},
+    {from:"quote_new", to:"quote_detail", type:"action", label:"createQuoteAction", happy:true},
+    {from:"quote_detail", to:"quote_print", type:"nav", label:"인쇄/PDF"},
+    {from:"quote_detail", to:"quote_payment", type:"nav", label:"결제/금융설계", happy:true},
+
+    {from:"quote_payment", to:"contract_detail", type:"action", label:"createContractAction (재검증→재고차감→계약)", happy:true},
+    {from:"contracts", to:"contract_detail", type:"nav", label:"계약 선택"},
+    {from:"contract_detail", to:"sign_token", type:"action", label:"resendSignatureAction (서명링크 발급)", happy:true},
+    {from:"sign_token", to:"contract_detail", type:"action", label:"signContractAction (서명완료 → Order 생성)", happy:true},
+    {from:"contract_detail", to:"delivery_detail", type:"action", label:"createDeliveryJobAction / createInstallJobAction", happy:true},
+
+    {from:"deliveries", to:"delivery_detail", type:"nav", label:"배송 선택"},
+    {from:"delivery_detail", to:"track_token", type:"nav", label:"추적 링크 공유", happy:true},
+    {from:"delivery_detail", to:"consultation_detail", type:"action", label:"주문완료 → 상담 COMPLETED", happy:true}
+  ];
+
+  var catMap = {};
+  CATEGORIES.forEach(function(c){ catMap[c.id] = c; });
+  var nodeMap = {};
+  NODES.forEach(function(n){ nodeMap[n.id] = n; });
+
+  var state = { hiddenCats:{}, selected:null, happyOn:false, labelsOn:false };
+
+  var board = document.getElementById("board");
+  var svg = document.getElementById("edgeSvg");
+  var boardWrap = document.getElementById("boardWrap");
+  var filterList = document.getElementById("filterList");
+  var detailBody = document.getElementById("detailBody");
+
+  function el(tag, cls, html){
+    var e = document.createElement(tag);
+    if(cls) e.className = cls;
+    if(html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function buildFilters(){
+    CATEGORIES.forEach(function(c){
+      var row = el("label", "filter-item");
+      var cb = document.createElement("input");
+      cb.type = "checkbox"; cb.checked = true;
+      cb.addEventListener("change", function(){
+        state.hiddenCats[c.id] = !cb.checked;
+        applyFilters();
+      });
+      var sw = el("span", "swatch");
+      sw.style.background = c.color;
+      row.appendChild(cb); row.appendChild(sw);
+      row.appendChild(document.createTextNode(c.label));
+      filterList.appendChild(row);
+    });
+  }
+
+  function buildLanes(){
+    CATEGORIES.forEach(function(c){
+      var lane = el("div", "lane");
+      lane.dataset.cat = c.id;
+      var header = el("div", "lane-header", c.label);
+      lane.appendChild(header);
+      NODES.filter(function(n){ return n.category === c.id; }).forEach(function(n){
+        var node = el("div", "node" + (n.isPublic ? " public" : ""));
+        node.id = "node-" + n.id;
+        node.dataset.id = n.id;
+        var dot = el("span", "cat-dot");
+        dot.style.background = c.color;
+        node.appendChild(dot);
+        node.appendChild(el("div", "route", n.route));
+        node.appendChild(el("div", "name", n.name));
+        node.addEventListener("click", function(){ selectNode(n.id); });
+        lane.appendChild(node);
+      });
+      board.appendChild(lane);
+    });
+  }
+
+  function edgeColor(e){
+    if(e.type === "action") return "var(--c-contract)";
+    return "var(--nav-edge)";
+  }
+
+  function computeSide(r1, r2){
+    var dx = r2.cx - r1.cx, dy = r2.cy - r1.cy;
+    if(Math.abs(dx) >= Math.abs(dy)){
+      if(dx >= 0) return {x1:r1.cx + r1.w/2, y1:r1.cy, x2:r2.cx - r2.w/2, y2:r2.cy, horiz:true};
+      return {x1:r1.cx - r1.w/2, y1:r1.cy, x2:r2.cx + r2.w/2, y2:r2.cy, horiz:true};
+    }
+    if(dy >= 0) return {x1:r1.cx, y1:r1.cy + r1.h/2, x2:r2.cx, y2:r2.cy - r2.h/2, horiz:false};
+    return {x1:r1.cx, y1:r1.cy - r1.h/2, x2:r2.cx, y2:r2.cy + r2.h/2, horiz:false};
+  }
+
+  function drawEdges(){
+    var boardRect = board.getBoundingClientRect();
+    svg.setAttribute("width", board.scrollWidth);
+    svg.setAttribute("height", board.scrollHeight);
+    // clear previous paths/labels (keep defs)
+    Array.prototype.slice.call(svg.querySelectorAll("path.edge, g.edge-label")).forEach(function(n){ n.remove(); });
+
+    EDGES.forEach(function(e, idx){
+      var fromEl = document.getElementById("node-" + e.from);
+      var toEl = document.getElementById("node-" + e.to);
+      if(!fromEl || !toEl) return;
+      var fr = fromEl.getBoundingClientRect(), tr = toEl.getBoundingClientRect();
+      var r1 = {cx: fr.left - boardRect.left + fr.width/2, cy: fr.top - boardRect.top + fr.height/2, w:fr.width, h:fr.height};
+      var r2 = {cx: tr.left - boardRect.left + tr.width/2, cy: tr.top - boardRect.top + tr.height/2, w:tr.width, h:tr.height};
+      var pts = computeSide(r1, r2);
+      var d;
+      if(pts.horiz){
+        var mx = (pts.x1 + pts.x2) / 2;
+        d = "M" + pts.x1 + "," + pts.y1 + " C " + mx + "," + pts.y1 + " " + mx + "," + pts.y2 + " " + pts.x2 + "," + pts.y2;
+      } else {
+        var my = (pts.y1 + pts.y2) / 2;
+        d = "M" + pts.x1 + "," + pts.y1 + " C " + pts.x1 + "," + my + " " + pts.x2 + "," + my + " " + pts.x2 + "," + pts.y2;
+      }
+      var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", d);
+      path.setAttribute("class", "edge" + (e.type === "action" ? " action" : "") + (e.happy ? " happy-edge" : ""));
+      path.setAttribute("stroke", edgeColor(e));
+      path.setAttribute("marker-end", e.type === "action" ? "url(#arrowAction)" : "url(#arrow)");
+      path.dataset.from = e.from; path.dataset.to = e.to; path.dataset.happy = !!e.happy;
+      var title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+      title.textContent = e.label;
+      path.appendChild(title);
+      svg.appendChild(path);
+
+      if(state.labelsOn && e.type === "action"){
+        var lx = (pts.x1 + pts.x2) / 2, ly = (pts.y1 + pts.y2) / 2;
+        var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute("class", "edge-label");
+        var txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        txt.setAttribute("x", lx); txt.setAttribute("y", ly - 4);
+        txt.setAttribute("font-size", "9.5"); txt.setAttribute("fill", "#fbbf24");
+        txt.setAttribute("text-anchor", "middle");
+        txt.textContent = e.label.length > 26 ? e.label.slice(0,24) + "…" : e.label;
+        g.appendChild(txt);
+        svg.appendChild(g);
+      }
+    });
+    applyHappyClass();
+  }
+
+  function applyHappyClass(){
+    var paths = svg.querySelectorAll("path.edge");
+    paths.forEach(function(p){
+      if(state.happyOn && p.dataset.happy === "true"){
+        p.classList.add("happy");
+        p.setAttribute("marker-end", "url(#arrowHappy)");
+      } else {
+        p.classList.remove("happy");
+        p.setAttribute("marker-end", p.classList.contains("action") ? "url(#arrowAction)" : "url(#arrow)");
+      }
+      if(state.happyOn && p.dataset.happy !== "true"){
+        p.classList.add("dimmed");
+      } else {
+        p.classList.remove("dimmed");
+      }
+    });
+    document.querySelectorAll(".node").forEach(function(n){
+      if(!state.happyOn) return;
+      var id = n.dataset.id;
+      var onPath = EDGES.some(function(e){ return e.happy && (e.from === id || e.to === id); });
+      n.classList.toggle("dimmed", !onPath && !state.hiddenCats[nodeMap[id].category] ? false : n.classList.contains("dimmed"));
+    });
+  }
+
+  function applyFilters(){
+    document.querySelectorAll(".node").forEach(function(n){
+      var id = n.dataset.id;
+      var hidden = state.hiddenCats[nodeMap[id].category];
+      n.classList.toggle("dimmed", !!hidden);
+    });
+    document.querySelectorAll("path.edge").forEach(function(p){
+      var fromHidden = state.hiddenCats[nodeMap[p.dataset.from].category];
+      var toHidden = state.hiddenCats[nodeMap[p.dataset.to].category];
+      p.classList.toggle("dimmed", !!(fromHidden || toHidden));
+    });
+  }
+
+  function selectNode(id){
+    document.querySelectorAll(".node.selected").forEach(function(n){ n.classList.remove("selected"); });
+    var el2 = document.getElementById("node-" + id);
+    if(el2) el2.classList.add("selected");
+    state.selected = id;
+    renderDetail(id);
+  }
+
+  function renderDetail(id){
+    var n = nodeMap[id];
+    var cat = catMap[n.category];
+    var outgoing = EDGES.filter(function(e){ return e.from === id; });
+    var incoming = EDGES.filter(function(e){ return e.to === id; });
+
+    var html = "";
+    html += '<span class="badge" style="border-color:' + cat.color + '">' + cat.label + '</span>';
+    if(n.isPublic) html += '<span class="badge" style="color:#fbbf24;border-color:#fbbf24">인증 없음</span>';
+    html += '<div class="route">' + n.route + '</div>';
+    html += '<div class="name">' + n.name + '</div>';
+    html += '<div class="desc">' + n.desc + '</div>';
+
+    if(n.related && n.related.length){
+      html += '<div class="rel-title">관련 서버 액션 / 규약</div><ul>';
+      n.related.forEach(function(r){ html += '<li>' + r + '</li>'; });
+      html += '</ul>';
+    }
+
+    if(outgoing.length){
+      html += '<div class="rel-title">나가는 전이 (' + outgoing.length + ')</div><div class="edge-list">';
+      outgoing.forEach(function(e){
+        html += '<div><span class="tag">[' + (e.type === "action" ? "액션" : "이동") + ']</span> → ' + nodeMap[e.to].name + ' — ' + e.label + '</div>';
+      });
+      html += '</div>';
+    }
+    if(incoming.length){
+      html += '<div class="rel-title">들어오는 전이 (' + incoming.length + ')</div><div class="edge-list">';
+      incoming.forEach(function(e){
+        html += '<div><span class="tag">[' + (e.type === "action" ? "액션" : "이동") + ']</span> ← ' + nodeMap[e.from].name + ' — ' + e.label + '</div>';
+      });
+      html += '</div>';
+    }
+    detailBody.innerHTML = html;
+  }
+
+  buildFilters();
+  buildLanes();
+
+  function redraw(){ drawEdges(); applyFilters(); }
+  redraw();
+  window.addEventListener("resize", redraw);
+  boardWrap.addEventListener("scroll", function(){ /* svg is absolutely positioned inside scrolling board, no reflow needed */ });
+
+  document.getElementById("happyBtn").addEventListener("click", function(){
+    state.happyOn = !state.happyOn;
+    this.classList.toggle("active", state.happyOn);
+    applyHappyClass();
+  });
+  document.getElementById("labelBtn").addEventListener("click", function(){
+    state.labelsOn = !state.labelsOn;
+    this.classList.toggle("active", state.labelsOn);
+    drawEdges();
+  });
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    state.hiddenCats = {};
+    filterList.querySelectorAll("input").forEach(function(cb){ cb.checked = true; });
+    applyFilters();
+  });
+
+})();
+</script>
+</body>
+</html>
