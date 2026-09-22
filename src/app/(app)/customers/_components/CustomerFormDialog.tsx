@@ -57,7 +57,7 @@ export function CustomerFormDialog({
       >
         <form id={formId} action={run} className="flex flex-col gap-lg">
           {values && <input type="hidden" name="customerId" value={values.id} />}
-          <div className="grid grid-cols-2 gap-lg">
+          <div className="grid grid-cols-1 gap-lg sm:grid-cols-2">
             <TextField
               name="name"
               label="고객명"

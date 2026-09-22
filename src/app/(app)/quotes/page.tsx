@@ -81,14 +81,18 @@ export default async function QuotesPage({
         title="견적서 작성"
         actions={<LinkButton href="/quotes/new">새 견적 작성</LinkButton>}
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto max-w-container">
           <QuoteNoticeBanner notice={pickOne(params, "quote")} />
 
           <CardGrid>
             <Card title="견적 검색" className="col-span-12">
-              <form method="get" action="/quotes" className="flex flex-wrap items-end gap-lg">
-                <div className="min-w-[280px] flex-1">
+              <form
+                method="get"
+                action="/quotes"
+                className="flex flex-col gap-md sm:flex-row sm:flex-wrap sm:items-end sm:gap-lg"
+              >
+                <div className="w-full sm:min-w-[280px] sm:flex-1">
                   <TextField
                     name="q"
                     label="견적번호 · 고객명 · 회원번호"
@@ -96,7 +100,7 @@ export default async function QuotesPage({
                     placeholder="견적번호 또는 고객명"
                   />
                 </div>
-                <div className="w-48">
+                <div className="w-full sm:w-48">
                   <Select name="status" label="상태" defaultValue={filter}>
                     <option value="all">전체</option>
                     <option value="editable">작성중 (수정 가능)</option>
@@ -104,7 +108,7 @@ export default async function QuotesPage({
                     <option value="expired">유효기간 경과</option>
                   </Select>
                 </div>
-                <div className="flex gap-md pb-px">
+                <div className="flex gap-md sm:pb-px">
                   <Button type="submit">검색</Button>
                   <LinkButton href="/quotes" variant="secondary">
                     초기화

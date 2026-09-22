@@ -103,7 +103,10 @@ function RescheduleForm({
   scheduledAt: Date | null;
 }) {
   return (
-    <form action={rescheduleJobAction} className="flex flex-wrap items-end gap-sm">
+    <form
+      action={rescheduleJobAction}
+      className="flex flex-col gap-sm sm:flex-row sm:flex-wrap sm:items-end"
+    >
       <input type="hidden" name="orderId" value={orderId} />
       <input type="hidden" name="jobId" value={jobId} />
       <input type="hidden" name="kind" value={kind} />
@@ -175,7 +178,7 @@ export default async function DeliveryDetailPage({
           </Link>
         }
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto max-w-container">
           <DeliveryNoticeBanner
             notice={pickOne(search, "delivery")}
@@ -201,7 +204,7 @@ export default async function DeliveryDetailPage({
               className="col-span-12 lg:col-span-7"
               action={<OrderStatusBadge status={order.status} />}
             >
-              <dl className="grid grid-cols-2 gap-x-xl">
+              <dl className="grid grid-cols-1 gap-x-xl sm:grid-cols-2">
                 <Field label="주문번호" value={order.orderNo} />
                 <Field
                   label="계약"

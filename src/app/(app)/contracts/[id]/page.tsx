@@ -93,7 +93,7 @@ export default async function ContractDetailPage({
           </>
         }
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto max-w-container">
           <ContractNoticeBanner
             notice={pickOne(search, "contract")}
@@ -123,7 +123,7 @@ export default async function ContractDetailPage({
               className="col-span-12 lg:col-span-7"
               action={<ContractStatusBadge status={contract.status} />}
             >
-              <dl className="grid grid-cols-2 gap-x-xl">
+              <dl className="grid grid-cols-1 gap-x-xl sm:grid-cols-2">
                 <Field label="계약번호" value={contract.contractNo} />
                 <Field
                   label="원본 견적"
@@ -228,7 +228,7 @@ export default async function ContractDetailPage({
 
             <Card title="결제 조건 (계약 시점 스냅샷)" className="col-span-12 lg:col-span-6">
               {financeSnapshot ? (
-                <dl className="grid grid-cols-2 gap-x-xl">
+                <dl className="grid grid-cols-1 gap-x-xl sm:grid-cols-2">
                   <Field
                     label="결제수단"
                     value={`${financeSnapshot.name} (${
@@ -306,7 +306,7 @@ export default async function ContractDetailPage({
                       <img
                         src={current.signatureImage}
                         alt={`${current.signerName ?? "고객"} 서명`}
-                        className="h-32 rounded-control border border-gray-200 bg-white"
+                        className="h-32 w-auto max-w-full rounded-control border border-gray-200 bg-white object-contain"
                       />
                     </div>
                   )}
@@ -375,7 +375,7 @@ export default async function ContractDetailPage({
               <Card title="계약 변경" className="col-span-12 lg:col-span-7">
                 <form action={amendContractAction} className="flex flex-col gap-lg">
                   <input type="hidden" name="contractId" value={contract.id} />
-                  <div className="grid grid-cols-2 gap-lg">
+                  <div className="grid grid-cols-1 gap-lg sm:grid-cols-2">
                     <TextField
                       name="recipientName"
                       label="수령인"

@@ -201,7 +201,7 @@ export default async function NewQuotePage({
           </LinkButton>
         }
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto max-w-container">
           <QuoteNoticeBanner notice={pickOne(params, "quote")} />
 
@@ -222,11 +222,15 @@ export default async function NewQuotePage({
                 </div>
               ) : (
                 <>
-                  <form method="get" action="/quotes/new" className="flex flex-wrap items-end gap-lg">
+                  <form
+                    method="get"
+                    action="/quotes/new"
+                    className="flex flex-col gap-md sm:flex-row sm:flex-wrap sm:items-end sm:gap-lg"
+                  >
                     {comparisonId && <input type="hidden" name="comparisonId" value={comparisonId} />}
                     {templateId && <input type="hidden" name="templateId" value={templateId} />}
                     {productQuery && <input type="hidden" name="pq" value={productQuery} />}
-                    <div className="min-w-[280px] flex-1">
+                    <div className="w-full sm:min-w-[280px] sm:flex-1">
                       <TextField
                         name="cq"
                         label="고객명 · 휴대폰번호 · 회원번호"
@@ -234,7 +238,7 @@ export default async function NewQuotePage({
                         placeholder="홍길동 / 01012345678"
                       />
                     </div>
-                    <div className="pb-px">
+                    <div className="sm:pb-px">
                       <Button type="submit">고객 검색</Button>
                     </div>
                   </form>
@@ -289,11 +293,15 @@ export default async function NewQuotePage({
                 </Notice>
               )}
 
-              <form method="get" action="/quotes/new" className="flex flex-wrap items-end gap-lg">
+              <form
+                method="get"
+                action="/quotes/new"
+                className="flex flex-col gap-md sm:flex-row sm:flex-wrap sm:items-end sm:gap-lg"
+              >
                 {customerId && <input type="hidden" name="customerId" value={customerId} />}
                 {comparisonId && <input type="hidden" name="comparisonId" value={comparisonId} />}
                 {templateId && <input type="hidden" name="templateId" value={templateId} />}
-                <div className="min-w-[280px] flex-1">
+                <div className="w-full sm:min-w-[280px] sm:flex-1">
                   <TextField
                     name="pq"
                     label="상품명 · 모델코드 · 스펙으로 후보 추가"
@@ -302,7 +310,7 @@ export default async function NewQuotePage({
                     hint="검색하면 아래 후보 목록에 더해집니다. 선택 상태는 검색할 때 초기화됩니다."
                   />
                 </div>
-                <div className="pb-px">
+                <div className="sm:pb-px">
                   <Button type="submit" variant="secondary">
                     상품 검색
                   </Button>
@@ -315,7 +323,7 @@ export default async function NewQuotePage({
                 <input type="hidden" name="customerId" value={customer?.id ?? ""} />
 
                 {consultations.length > 0 && (
-                  <div className="w-96">
+                  <div className="w-full sm:w-96">
                     <Select name="consultationId" label="연결할 상담 (선택)" defaultValue="">
                       <option value="">상담 연결 안 함</option>
                       {consultations.map((consultation) => (

@@ -170,10 +170,13 @@ export default async function DashboardPage({
   return (
     <>
       <PageHeader title="상담대시보드" />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto flex max-w-container flex-col gap-lg">
           <Card title="조회 조건">
-            <form method="get" className="grid grid-cols-1 items-end gap-md md:grid-cols-12">
+            <form
+              method="get"
+              className="grid grid-cols-1 items-end gap-md sm:grid-cols-2 md:grid-cols-12"
+            >
               <div className="md:col-span-3">
                 <TextField
                   name="from"
@@ -204,7 +207,7 @@ export default async function DashboardPage({
                       ))}
                 </Select>
               </div>
-              <div className="flex gap-sm md:col-span-3 md:justify-end md:pb-px">
+              <div className="flex flex-wrap gap-sm md:col-span-3 md:justify-end md:pb-px">
                 <Link href="/dashboard">
                   <Button variant="secondary">초기화</Button>
                 </Link>

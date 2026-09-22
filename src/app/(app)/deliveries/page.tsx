@@ -70,7 +70,7 @@ export default async function DeliveriesPage({
   return (
     <>
       <PageHeader title="배송 및 설치 추적" />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto max-w-container">
           <DeliveryNoticeBanner
             notice={pickOne(params, "delivery")}
@@ -88,8 +88,12 @@ export default async function DeliveriesPage({
 
           <CardGrid>
             <Card title="주문 검색" className="col-span-12">
-              <form method="get" action="/deliveries" className="flex flex-wrap items-end gap-lg">
-                <div className="min-w-[280px] flex-1">
+              <form
+                method="get"
+                action="/deliveries"
+                className="flex flex-col gap-md sm:flex-row sm:flex-wrap sm:items-end sm:gap-lg"
+              >
+                <div className="w-full sm:min-w-[280px] sm:flex-1">
                   <TextField
                     name="q"
                     label="주문번호 · 계약번호 · 고객명"
@@ -97,7 +101,7 @@ export default async function DeliveriesPage({
                     placeholder="주문번호 또는 고객명"
                   />
                 </div>
-                <div className="w-48">
+                <div className="w-full sm:w-48">
                   <Select name="status" label="주문 상태" defaultValue={status ?? ""}>
                     <option value="">전체</option>
                     <option value="PLACED">접수</option>
@@ -108,7 +112,7 @@ export default async function DeliveriesPage({
                     <option value="CANCELLED">취소</option>
                   </Select>
                 </div>
-                <div className="pb-px">
+                <div className="sm:pb-px">
                   <Button type="submit">검색</Button>
                 </div>
               </form>

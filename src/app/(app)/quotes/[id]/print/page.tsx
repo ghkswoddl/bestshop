@@ -25,7 +25,7 @@ export default async function QuotePrintPage({ params }: { params: Promise<{ id:
   return (
     <main className="flex-1 overflow-y-auto bg-white p-xl">
       <div className="print-sheet mx-auto max-w-[800px]">
-        <div className="print-hidden mb-xl flex items-center justify-between gap-md">
+        <div className="print-hidden mb-xl flex flex-col items-start gap-md sm:flex-row sm:items-center sm:justify-between">
           <p className="text-caption text-gray-700">
             브라우저 인쇄(Ctrl+P / Cmd+P)에서 &lsquo;PDF로 저장&rsquo;을 선택하면 견적서 파일이
             만들어집니다.
@@ -35,7 +35,7 @@ export default async function QuotePrintPage({ params }: { params: Promise<{ id:
           </LinkButton>
         </div>
 
-        <header className="flex items-start justify-between gap-lg border-b-2 border-lg-red pb-lg">
+        <header className="flex flex-col gap-lg border-b-2 border-lg-red pb-lg sm:flex-row sm:items-start sm:justify-between print:flex-row print:items-start print:justify-between">
           <div>
             <h1 className="text-display text-gray-900">견 적 서</h1>
             <p className="mt-sm text-body tabular-nums text-gray-700">
@@ -43,7 +43,7 @@ export default async function QuotePrintPage({ params }: { params: Promise<{ id:
               {quote.version > 1 ? ` (버전 ${quote.version})` : ""}
             </p>
           </div>
-          <div className="text-right">
+          <div className="sm:text-right print:text-right">
             <p className="text-h2 text-lg-red">LG Bestshop</p>
             <p className="text-body text-gray-900">{quote.store.name}</p>
             <p className="text-caption text-gray-700">{quote.store.address}</p>
@@ -51,7 +51,7 @@ export default async function QuotePrintPage({ params }: { params: Promise<{ id:
           </div>
         </header>
 
-        <section className="mt-xl grid grid-cols-2 gap-xl">
+        <section className="mt-xl grid grid-cols-1 gap-xl sm:grid-cols-2 print:grid-cols-2">
           <div>
             <h2 className="mb-sm text-h3 text-gray-900">고객 정보</h2>
             <dl className="text-body text-gray-900">
@@ -138,7 +138,7 @@ export default async function QuotePrintPage({ params }: { params: Promise<{ id:
         </section>
 
         <section className="mt-xl flex justify-end">
-          <dl className="w-80">
+          <dl className="w-full sm:w-80 print:w-80">
             <div className="flex justify-between border-b border-gray-200 py-sm text-body">
               <dt className="text-gray-700">상품 합계</dt>
               <dd className="tabular-nums">{formatKRW(quote.subtotal)}</dd>

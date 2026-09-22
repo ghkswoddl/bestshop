@@ -85,7 +85,7 @@ export default async function PromotionDetailPage({
           </Link>
         }
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto flex max-w-container flex-col gap-lg">
           {flags.isActive ? (
             <Notice tone="success">

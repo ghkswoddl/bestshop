@@ -101,7 +101,7 @@ export function SignaturePad({ token }: { token: string }) {
           onPointerLeave={endStroke}
           className="h-48 w-full touch-none rounded-control border-2 border-dashed border-gray-400 bg-white"
         />
-        <div className="mt-sm flex items-center justify-between gap-md">
+        <div className="mt-sm flex flex-wrap items-center justify-between gap-md">
           <p className="text-caption text-gray-700">
             {hasDrawing ? "서명이 입력되었습니다." : "아직 서명이 입력되지 않았습니다."}
           </p>

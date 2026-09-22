@@ -125,7 +125,7 @@ export default async function InventoryPage({
           </Link>
         }
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto flex max-w-container flex-col gap-lg">
           <TransferNotice state={pickOne(params, "transfer")} />
 
@@ -139,7 +139,7 @@ export default async function InventoryPage({
           <CardGrid>
             <Card title="재고 조회" className="col-span-12 lg:col-span-8">
               <form method="get" className="grid grid-cols-1 items-end gap-md md:grid-cols-12">
-                <div className="md:col-span-5">
+                <div className="md:col-span-4">
                   <TextField
                     name="q"
                     label="상품 검색"
@@ -167,7 +167,7 @@ export default async function InventoryPage({
                     ))}
                   </Select>
                 </div>
-                <div className="flex gap-sm md:col-span-2 md:justify-end">
+                <div className="flex gap-sm md:col-span-3 md:justify-end">
                   <Link href="/inventory">
                     <Button variant="secondary">초기화</Button>
                   </Link>

@@ -22,7 +22,7 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex gap-md py-sm">
       <dt className="w-24 shrink-0 text-caption text-gray-700">{label}</dt>
-      <dd className="text-body text-gray-900">{value ?? "-"}</dd>
+      <dd className="min-w-0 break-words text-body text-gray-900">{value ?? "-"}</dd>
     </div>
   );
 }
@@ -60,7 +60,7 @@ export default async function StorePage() {
   return (
     <>
       <PageHeader title="매장 및 매니저 정보" />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto max-w-container">
           <CardGrid>
             <Card title="소속 매장 정보" className="col-span-12 lg:col-span-7">
@@ -89,7 +89,10 @@ export default async function StorePage() {
             <Card title="담당 매니저 정보" className="col-span-12 lg:col-span-5">
               <dl className="divide-y divide-gray-200">
                 <Field label="이름" value={manager.name} />
-                <Field label="사번" value={<span className="tabular-nums">{manager.employeeNo}</span>} />
+                <Field
+                  label="사번"
+                  value={<span className="tabular-nums">{manager.employeeNo}</span>}
+                />
                 <Field label="역할" value={<RoleBadge role={ctx.role} />} />
                 <Field label="담당업무" value={manager.duty} />
                 <Field label="연락처" value={manager.phone} />

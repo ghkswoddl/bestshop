@@ -75,7 +75,7 @@ export default async function ContractsPage({
   return (
     <>
       <PageHeader title="계약 및 전자서명" />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto max-w-container">
           <ContractNoticeBanner
             notice={pickOne(params, "contract")}
@@ -99,8 +99,12 @@ export default async function ContractsPage({
 
           <CardGrid>
             <Card title="계약 검색" className="col-span-12">
-              <form method="get" action="/contracts" className="flex flex-wrap items-end gap-lg">
-                <div className="min-w-[280px] flex-1">
+              <form
+                method="get"
+                action="/contracts"
+                className="flex flex-col gap-md sm:flex-row sm:flex-wrap sm:items-end sm:gap-lg"
+              >
+                <div className="sm:min-w-[280px] sm:flex-1">
                   <TextField
                     name="q"
                     label="계약번호 · 고객명 · 견적번호"
@@ -108,7 +112,7 @@ export default async function ContractsPage({
                     placeholder="계약번호 또는 고객명"
                   />
                 </div>
-                <div className="w-48">
+                <div className="sm:w-48">
                   <Select name="status" label="계약 상태" defaultValue={status ?? ""}>
                     <option value="">전체</option>
                     <option value="PENDING_SIGNATURE">서명 대기</option>
@@ -117,7 +121,7 @@ export default async function ContractsPage({
                     <option value="CANCELLED">취소</option>
                   </Select>
                 </div>
-                <div className="pb-px">
+                <div className="sm:pb-px">
                   <Button type="submit">검색</Button>
                 </div>
               </form>

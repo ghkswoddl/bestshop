@@ -20,7 +20,12 @@ export function Card({ title, action, flush, className, children, ...props }: Ca
       {...props}
     >
       {(title || action) && (
-        <div className={cn("flex items-center justify-between gap-md", flush && "px-lg pt-lg")}>
+        <div
+          className={cn(
+            "flex flex-wrap items-center justify-between gap-md",
+            flush && "px-lg pt-lg",
+          )}
+        >
           {title ? <h3 className="text-h3 text-gray-900">{title}</h3> : <span />}
           {action}
         </div>

@@ -61,7 +61,7 @@ export function ApplianceDialog({
         <form id={formId} action={run} className="flex flex-col gap-lg">
           <input type="hidden" name="customerId" value={customerId} />
           {values && <input type="hidden" name="applianceId" value={values.id} />}
-          <div className="grid grid-cols-2 gap-lg">
+          <div className="grid grid-cols-1 gap-lg sm:grid-cols-2">
             <Select
               name="categoryId"
               label="품목"

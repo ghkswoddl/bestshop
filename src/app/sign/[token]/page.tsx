@@ -78,7 +78,7 @@ export default async function SignPage({
 
         <div className="flex flex-col gap-lg">
           <Card title="계약 내용">
-            <dl className="grid grid-cols-2 gap-x-xl">
+            <dl className="grid grid-cols-1 gap-x-xl sm:grid-cols-2">
               <div className="flex gap-md py-sm">
                 <dt className="w-24 shrink-0 text-caption text-gray-700">계약번호</dt>
                 <dd className="text-body tabular-nums text-gray-900">{contract.contractNo}</dd>
@@ -97,7 +97,7 @@ export default async function SignPage({
                   {customer?.phone ? formatPhone(customer.phone) : "-"}
                 </dd>
               </div>
-              <div className="col-span-2 flex gap-md py-sm">
+              <div className="flex gap-md py-sm sm:col-span-2">
                 <dt className="w-24 shrink-0 text-caption text-gray-700">배송지</dt>
                 <dd className="text-body text-gray-900">
                   {[address?.address, address?.addressDetail].filter(Boolean).join(" ") || "-"}
@@ -139,9 +139,9 @@ export default async function SignPage({
             <dl className="divide-y divide-gray-200">
               {finance && (
                 <>
-                  <div className="flex justify-between py-sm text-body">
+                  <div className="flex flex-wrap justify-between gap-x-md py-sm text-body">
                     <dt className="text-gray-700">결제수단</dt>
-                    <dd className="text-gray-900">
+                    <dd className="text-gray-900 sm:text-right">
                       {finance.name}
                       {finance.months > 0
                         ? ` · ${finance.months}개월 · ${aprLabel(finance.apr)}`
@@ -149,9 +149,9 @@ export default async function SignPage({
                     </dd>
                   </div>
                   {finance.months > 0 && (
-                    <div className="flex justify-between py-sm text-body">
+                    <div className="flex flex-wrap justify-between gap-x-md py-sm text-body">
                       <dt className="text-gray-700">월 납입금</dt>
-                      <dd className="tabular-nums text-gray-900">
+                      <dd className="tabular-nums text-gray-900 sm:text-right">
                         {formatKRW(finance.monthlyAmount)} × {finance.months - 1}회 + 마지막{" "}
                         {formatKRW(finance.lastMonthAmount)}
                       </dd>
@@ -159,7 +159,7 @@ export default async function SignPage({
                   )}
                 </>
               )}
-              <div className="flex items-baseline justify-between py-md">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-md py-md">
                 <dt className="text-h3 text-gray-900">총 결제금액</dt>
                 <dd className="text-display tabular-nums text-lg-red">
                   {formatKRW(contract.totalAmount)}
@@ -187,7 +187,7 @@ export default async function SignPage({
                 <img
                   src={request.signatureImage}
                   alt="제출된 서명"
-                  className="h-32 rounded-control border border-gray-200 bg-white"
+                  className="h-32 max-w-full rounded-control border border-gray-200 bg-white"
                 />
               </Card>
             )

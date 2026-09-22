@@ -153,7 +153,7 @@ export default async function QuoteDetailPage({
           </>
         }
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto max-w-container">
           <QuoteNoticeBanner notice={pickOne(search, "quote")} />
 
@@ -184,7 +184,7 @@ export default async function QuoteDetailPage({
               title="견적 정보"
               className="col-span-12 lg:col-span-8"
               action={
-                <div className="flex items-center gap-sm">
+                <div className="flex flex-wrap items-center justify-end gap-sm">
                   <QuoteStatusBadge status={quote.status} />
                   <ValidityBadge validity={validity} />
                   {quote.version > 1 && (
@@ -195,7 +195,7 @@ export default async function QuoteDetailPage({
                 </div>
               }
             >
-              <dl className="grid grid-cols-2 gap-x-xl divide-gray-200">
+              <dl className="grid grid-cols-1 gap-x-xl divide-gray-200 sm:grid-cols-2">
                 <div className="flex gap-md py-sm">
                   <dt className="w-24 shrink-0 text-caption text-gray-700">고객</dt>
                   <dd className="text-body">
@@ -378,7 +378,7 @@ export default async function QuoteDetailPage({
                             {editable ? (
                               <form
                                 action={updateQuoteItemAction}
-                                className="flex flex-wrap items-end gap-sm"
+                                className="flex flex-col gap-sm sm:flex-row sm:flex-wrap sm:items-end"
                               >
                                 <input type="hidden" name="quoteId" value={quote.id} />
                                 <input type="hidden" name="itemId" value={item.id} />
@@ -444,9 +444,9 @@ export default async function QuoteDetailPage({
                   <form
                     method="get"
                     action={`/quotes/${quote.id}`}
-                    className="flex flex-wrap items-end gap-lg"
+                    className="flex flex-col gap-md sm:flex-row sm:flex-wrap sm:items-end sm:gap-lg"
                   >
-                    <div className="min-w-[240px] flex-1">
+                    <div className="w-full sm:min-w-[240px] sm:flex-1">
                       <TextField
                         name="pq"
                         label="상품명 · 모델코드 · 스펙"
@@ -454,7 +454,7 @@ export default async function QuoteDetailPage({
                         placeholder="OLED / 냉장고 / 4도어"
                       />
                     </div>
-                    <div className="pb-px">
+                    <div className="sm:pb-px">
                       <Button type="submit" variant="secondary">
                         검색
                       </Button>

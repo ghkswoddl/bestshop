@@ -115,7 +115,7 @@ export default async function ProductDetailPage({
           </>
         }
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto flex max-w-container flex-col gap-lg">
           <CompareNotice state={pickOne(query, "compare")} />
           <TransferNotice state={pickOne(query, "transfer")} />
@@ -153,7 +153,7 @@ export default async function ProductDetailPage({
                 <Field label="출시일" value={formatDate(product.releasedAt)} />
                 <Field label="주요 기능" value={product.description} />
               </dl>
-              <div className="mt-lg flex gap-sm">
+              <div className="mt-lg flex flex-wrap gap-sm">
                 <AddToCompare productId={product.id} returnTo={returnTo} inCart={inCart.has(product.id)} />
                 <Link href="/compare">
                   <Button variant="secondary">비교함 보기</Button>

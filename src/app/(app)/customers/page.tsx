@@ -99,12 +99,16 @@ export default async function CustomersPage({
         title="고객조회"
         actions={<CustomerFormDialog mode="create" triggerLabel="신규 고객 등록" />}
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto max-w-container">
           <CardGrid>
             <Card title="고객 검색" className="col-span-12">
-              <form method="get" action="/customers" className="flex flex-wrap items-end gap-lg">
-                <div className="min-w-[280px] flex-1">
+              <form
+                method="get"
+                action="/customers"
+                className="flex flex-col gap-md sm:flex-row sm:flex-wrap sm:items-end sm:gap-lg"
+              >
+                <div className="w-full sm:min-w-[280px] sm:flex-1">
                   <TextField
                     name="q"
                     label="이름 · 휴대폰번호 · 회원번호"
@@ -113,20 +117,20 @@ export default async function CustomersPage({
                     hint="휴대폰번호는 하이픈·공백을 넣어도 동일하게 검색됩니다."
                   />
                 </div>
-                <div className="w-44">
+                <div className="w-full sm:w-44">
                   <Select name="consultation" label="상담 이력" defaultValue={params.consultation}>
                     <option value="all">전체</option>
                     <option value="has">기존 상담 있음</option>
                     <option value="none">상담 이력 없음</option>
                   </Select>
                 </div>
-                <div className="w-44">
+                <div className="w-full sm:w-44">
                   <Select name="sort" label="정렬" defaultValue={params.sort}>
                     <option value="recent">최근 업데이트순</option>
                     <option value="name">이름순</option>
                   </Select>
                 </div>
-                <div className="flex gap-md pb-px">
+                <div className="flex gap-md sm:pb-px">
                   <Button type="submit">검색</Button>
                   <Link
                     href="/customers"
@@ -139,7 +143,10 @@ export default async function CustomersPage({
             </Card>
 
             <Card title="검색조건 저장" className="col-span-12 xl:col-span-4">
-              <form action={saveSearchAction} className="flex items-end gap-md">
+              <form
+                action={saveSearchAction}
+                className="flex flex-col gap-md sm:flex-row sm:items-end"
+              >
                 <input type="hidden" name="q" value={params.q} />
                 <input type="hidden" name="consultation" value={params.consultation} />
                 <input type="hidden" name="sort" value={params.sort} />

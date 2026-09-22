@@ -143,7 +143,7 @@ export default async function ComparePage({
           </Link>
         }
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto flex max-w-container flex-col gap-lg">
           <CompareNotice state={pickOne(params, "compare")} />
 
@@ -165,7 +165,7 @@ export default async function ComparePage({
               flush
               className="col-span-12"
               action={
-                <div className="flex items-center gap-md">
+                <div className="flex flex-wrap items-center justify-end gap-md">
                   <span className="text-caption text-gray-700">
                     {items.length}/{COMPARISON_LIMIT}개 · 견적 대상 {candidateCount}개
                   </span>

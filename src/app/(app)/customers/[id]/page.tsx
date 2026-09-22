@@ -173,7 +173,7 @@ export default async function CustomerDetailPage({
           />
         }
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto max-w-container">
           <Link href="/customers" className="text-caption text-gray-700 hover:text-lg-red">
             ← 고객조회로 돌아가기
@@ -242,10 +242,10 @@ export default async function CustomerDetailPage({
             >
               <form
                 action={startConsultationAction}
-                className="flex flex-wrap items-end gap-md rounded-card bg-gray-100 p-lg"
+                className="flex flex-col gap-md rounded-card bg-gray-100 p-lg sm:flex-row sm:flex-wrap sm:items-end"
               >
                 <input type="hidden" name="customerId" value={customer.id} />
-                <div className="w-40">
+                <div className="w-full sm:w-40">
                   <Select name="channel" label="상담 채널" defaultValue="VISIT">
                     {CONSULTATION_CHANNEL.map((channel) => (
                       <option key={channel} value={channel}>
@@ -255,7 +255,7 @@ export default async function CustomerDetailPage({
                   </Select>
                 </div>
                 <Button type="submit">상담 시작</Button>
-                <p className="flex-1 text-caption text-gray-700">
+                <p className="flex-1 text-caption text-gray-700 sm:min-w-[16rem]">
                   고객조회만으로는 상담이 생성되지 않습니다. 이 버튼을 눌러야 상담 건이 만들어집니다.
                 </p>
               </form>
@@ -406,7 +406,7 @@ export default async function CustomerDetailPage({
                       key={appliance.id}
                       className="flex flex-wrap items-start justify-between gap-md rounded-control border border-gray-200 p-md"
                     >
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1 basis-full sm:basis-0">
                         <div className="flex flex-wrap items-center gap-sm">
                           <span className="text-h3 text-gray-900">{appliance.category.name}</span>
                           <span className="text-body text-gray-700">{appliance.modelName}</span>
@@ -479,7 +479,7 @@ export default async function CustomerDetailPage({
                   action={addConsultationNoteAction}
                   className="mt-lg flex flex-col gap-md border-t border-gray-200 pt-lg"
                 >
-                  <div className="w-64">
+                  <div className="w-full sm:w-64">
                     <Select name="consultationId" label="메모를 남길 진행중 상담">
                       {openConsultations.map((consultation) => (
                         <option key={consultation.id} value={consultation.id}>

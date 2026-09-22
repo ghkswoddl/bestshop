@@ -95,7 +95,7 @@ export default async function ConsultationDetailPage({
           </>
         }
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto max-w-container">
           <ConsultationNoticeBanner notice={pickOne(search, "consultation")} />
 
@@ -183,8 +183,12 @@ export default async function ConsultationDetailPage({
                       className="flex flex-wrap items-end justify-end gap-md"
                     >
                       <input type="hidden" name="consultationId" value={consultation.id} />
-                      <div className="min-w-[240px] flex-1">
-                        <TextField name="summary" label="종료 사유 / 요약" placeholder="예산 미달로 보류" />
+                      <div className="w-full sm:w-auto sm:min-w-[240px] sm:grow">
+                        <TextField
+                          name="summary"
+                          label="종료 사유 / 요약"
+                          placeholder="예산 미달로 보류"
+                        />
                       </div>
                       <ConfirmSubmitButton confirmMessage="상담을 종료할까요? 단계는 되돌릴 수 없습니다.">
                         상담 종료
@@ -269,7 +273,7 @@ export default async function ConsultationDetailPage({
               {!closed && (
                 <form action={addFollowUpAction} className="mb-lg flex flex-col gap-md">
                   <input type="hidden" name="consultationId" value={consultation.id} />
-                  <div className="grid grid-cols-2 gap-md">
+                  <div className="grid grid-cols-1 gap-md sm:grid-cols-2">
                     <Select name="type" label="유형" defaultValue="CALL">
                       {FOLLOW_UP_TYPE.map((type) => (
                         <option key={type} value={type}>
@@ -308,7 +312,7 @@ export default async function ConsultationDetailPage({
                           담당 {followUp.manager.name}
                         </p>
                         {followUp.status === "PENDING" && (
-                          <div className="mt-sm flex gap-xs">
+                          <div className="mt-sm flex flex-wrap gap-xs">
                             <form action={completeFollowUpAction}>
                               <input type="hidden" name="consultationId" value={consultation.id} />
                               <input type="hidden" name="followUpId" value={followUp.id} />
@@ -414,13 +418,13 @@ export default async function ConsultationDetailPage({
                 {timeline.map((entry) => (
                   <li
                     key={entry.id}
-                    className="flex flex-wrap items-start gap-md border-b border-gray-200 pb-md last:border-b-0"
+                    className="flex flex-wrap items-start gap-sm border-b border-gray-200 pb-md last:border-b-0 sm:gap-md"
                   >
-                    <span className="w-40 shrink-0 text-caption tabular-nums text-gray-700">
+                    <span className="shrink-0 text-caption tabular-nums text-gray-700 sm:w-40">
                       {formatDateTime(entry.at)}
                     </span>
                     <TimelineBadge kind={entry.kind} />
-                    <div className="min-w-0 flex-1">
+                    <div className="w-full min-w-0 sm:w-auto sm:flex-1">
                       <p className="text-body font-medium text-gray-900">
                         {entry.href ? (
                           <Link href={entry.href} className="text-lg-red hover:underline">

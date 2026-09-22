@@ -80,3 +80,14 @@ export function CloseIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+/** 모바일/태블릿에서 사이드바를 여는 햄버거 버튼용. */
+export function MenuIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base({ width: 20, height: 20, ...props })}>
+      <path d="M4 6h16" />
+      <path d="M4 12h16" />
+      <path d="M4 18h16" />
+    </svg>
+  );
+}

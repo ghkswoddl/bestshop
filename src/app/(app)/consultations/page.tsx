@@ -106,7 +106,7 @@ export default async function ConsultationsPage({
           </LinkButton>
         }
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto max-w-container">
           <ConsultationNoticeBanner notice={pickOne(params, "consultation")} />
 
@@ -119,8 +119,12 @@ export default async function ConsultationsPage({
 
           <CardGrid>
             <Card title="상담 검색" className="col-span-12">
-              <form method="get" action="/consultations" className="flex flex-wrap items-end gap-lg">
-                <div className="min-w-[240px] flex-1">
+              <form
+                method="get"
+                action="/consultations"
+                className="grid grid-cols-1 items-end gap-md sm:grid-cols-2 lg:grid-cols-6 lg:gap-lg"
+              >
+                <div className="sm:col-span-2">
                   <TextField
                     name="q"
                     label="고객명 · 연락처 · 상담내용"
@@ -128,7 +132,7 @@ export default async function ConsultationsPage({
                     placeholder="고객명 또는 메모 내용"
                   />
                 </div>
-                <div className="w-40">
+                <div>
                   <Select name="stage" label="상담 단계" defaultValue={stage ?? ""}>
                     <option value="">전체</option>
                     <option value="IN_PROGRESS">진행중</option>
@@ -140,7 +144,7 @@ export default async function ConsultationsPage({
                     <option value="CANCELLED">취소</option>
                   </Select>
                 </div>
-                <div className="w-40">
+                <div>
                   <Select name="manager" label="담당 매니저" defaultValue={managerId ?? ""}>
                     <option value="">전체</option>
                     {colleagues.map((manager) => (
@@ -150,13 +154,23 @@ export default async function ConsultationsPage({
                     ))}
                   </Select>
                 </div>
-                <div className="w-40">
-                  <TextField name="from" label="상담일 시작" type="date" defaultValue={pickOne(params, "from") ?? ""} />
+                <div>
+                  <TextField
+                    name="from"
+                    label="상담일 시작"
+                    type="date"
+                    defaultValue={pickOne(params, "from") ?? ""}
+                  />
                 </div>
-                <div className="w-40">
-                  <TextField name="to" label="상담일 종료" type="date" defaultValue={pickOne(params, "to") ?? ""} />
+                <div>
+                  <TextField
+                    name="to"
+                    label="상담일 종료"
+                    type="date"
+                    defaultValue={pickOne(params, "to") ?? ""}
+                  />
                 </div>
-                <div className="flex gap-md pb-px">
+                <div className="flex flex-wrap gap-md sm:col-span-2 lg:col-span-6 lg:justify-end">
                   <Button type="submit">검색</Button>
                   <LinkButton href="/consultations" variant="secondary">
                     초기화

@@ -111,7 +111,7 @@ export default async function QuotePaymentPage({
           </LinkButton>
         }
       />
-      <main className="flex-1 overflow-y-auto p-xl">
+      <main className="flex-1 overflow-y-auto p-md sm:p-xl">
         <div className="mx-auto max-w-container">
           <PaymentNoticeBanner notice={pickOne(search, "pay")} />
 
@@ -176,7 +176,7 @@ export default async function QuotePaymentPage({
             >
               {plan ? (
                 <>
-                  <dl className="grid grid-cols-2 gap-x-xl">
+                  <dl className="grid grid-cols-1 gap-x-xl sm:grid-cols-2">
                     <Field
                       label="금융상품"
                       value={
@@ -241,11 +241,11 @@ export default async function QuotePaymentPage({
                           </form>
                           <form
                             action={decidePaymentPlanAction}
-                            className="flex flex-1 items-end gap-md"
+                            className="flex w-full flex-col gap-md sm:w-auto sm:flex-1 sm:flex-row sm:items-end"
                           >
                             <input type="hidden" name="quoteId" value={quote.id} />
                             <input type="hidden" name="decision" value="reject" />
-                            <div className="min-w-[200px] flex-1">
+                            <div className="w-full sm:min-w-[200px] sm:flex-1">
                               <TextField
                                 name="failureReason"
                                 label="거절 사유"
@@ -286,10 +286,10 @@ export default async function QuotePaymentPage({
               <form
                 method="get"
                 action={`/quotes/${quote.id}/payment`}
-                className="flex flex-wrap items-end gap-lg"
+                className="flex flex-col gap-md sm:flex-row sm:flex-wrap sm:items-end sm:gap-lg"
               >
                 {activeType && <input type="hidden" name="type" value={activeType} />}
-                <div className="w-56">
+                <div className="w-full sm:w-56">
                   <TextField
                     name="down"
                     label="선납금 (원)"
@@ -298,12 +298,12 @@ export default async function QuotePaymentPage({
                     hint="입력 후 '다시 계산' 을 누르면 아래 표가 갱신됩니다."
                   />
                 </div>
-                <div className="pb-px">
+                <div className="sm:pb-px">
                   <Button type="submit" variant="secondary">
                     다시 계산
                   </Button>
                 </div>
-                <div className="flex flex-wrap items-center gap-sm pb-md">
+                <div className="flex flex-wrap items-center gap-sm sm:pb-md">
                   <span className="text-caption text-gray-700">결제수단</span>
                   <Link
                     href={typeHref("")}
