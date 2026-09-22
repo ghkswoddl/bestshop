@@ -1014,11 +1014,11 @@ export async function seedCustomers(prisma: PrismaClient): Promise<void> {
     });
     if (!consultation) continue;
 
-    // Prisma 의 SQLite 커넥터는 DateTime 을 **epoch 밀리초 INTEGER** 로 저장한다.
-    // ISO 문자열을 넣으면 쓰기는 되지만 이후 읽기가 "Conversion failed" 로 깨진다.
+    // Postgres 는 DateTime 파라미터를 그대로 받는다 — SQLite 커넥터의 epoch 밀리초
+    // 우회가 필요 없다. 위치 파라미터는 `$1`/`$2`, 식별자는 대소문자 보존을 위해 큰따옴표.
     await prisma.$executeRawUnsafe(
-      `UPDATE Consultation SET updatedAt = ? WHERE id = ?`,
-      daysAgoDate(seed.staleDays).getTime(),
+      `UPDATE "Consultation" SET "updatedAt" = $1 WHERE "id" = $2`,
+      daysAgoDate(seed.staleDays),
       consultation.id,
     );
     staleCount++;

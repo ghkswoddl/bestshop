@@ -71,7 +71,12 @@ function back(path: string, notice: ContractNotice, detail?: string): never {
   redirect(`${path}?${query.toString()}`);
 }
 
-/** SQLite 는 쓰기를 직렬화한다. 동시 계약 시도에서 두 번째는 잠금 오류로 떨어질 수 있다. */
+/**
+ * 실제 동시성 방어는 (b)의 조건부 `updateMany` 자체다 — DB 종류와 무관하게 항상 정확하다.
+ * 이 함수는 그 위에 얹는 방어적 재시도 신호일 뿐이다. `P2034` 는 Prisma 가 쓰기 충돌 시
+ * 모든 드라이버 공통으로 내는 코드라 Postgres 에서도 그대로 유효하다. 정규식 쪽은
+ * SQLite 전용 에러 문자열이라 Postgres 에서는 매치되지 않는다 — 해가 되진 않지만 죽은 코드.
+ */
 function isBusyError(error: unknown): boolean {
   const code = (error as { code?: string })?.code;
   const message = error instanceof Error ? error.message : "";

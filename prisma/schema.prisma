@@ -1,6 +1,9 @@
 // LG Bestshop 고객상담 매니저 — 전체 데이터 모델 (P0 + P1)
 //
-// SQLite 제약으로 Prisma `enum` 과 `Json` 스칼라를 쓸 수 없다.
+// 원래 SQLite 제약으로 Prisma `enum`/`Json` 스칼라를 못 써서 아래 패턴이 생겼다.
+// 배포를 위해 Postgres(Neon)로 옮긴 뒤에도 패턴은 그대로 유지한다 — 네이티브 enum으로
+// 되돌리면 이 값을 다루는 모든 파일을 건드려야 하는 큰 리팩터가 되고, String + 유니온
+// 타입만으로도 Postgres에서 완전히 동작한다. 필요해지면 점진적으로 바꿔도 된다.
 // - enum  -> String + src/lib/enums.ts 의 유니온 타입이 단일 진실 공급원
 // - Json  -> String (JSON.stringify 결과 저장, 필드명 접미사 `Json`)
 //
@@ -11,8 +14,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 // ---------------------------------------------------------------- 조직/신원

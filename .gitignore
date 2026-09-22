@@ -41,6 +41,11 @@ yarn-error.log*
 # omc
 /.omc/
 
+# other local AI agent tooling (skills, scheduled tasks, lockfiles)
+/.agents/
+/.claude/
+skills-lock.json
+
 # vercel
 .vercel
 
